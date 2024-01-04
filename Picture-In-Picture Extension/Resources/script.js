@@ -3,7 +3,6 @@ let currentVideoElements = new Set();
 function pip() {
   if (currentVideoElements.size === 0) return;
 
-  // Find an active video (not paused) or default to the first video in the set
   let activeVideo = null;
   for (let video of currentVideoElements) {
     if (!video.paused) {
@@ -12,10 +11,8 @@ function pip() {
     }
   }
 
-  // If no active video is found, use the first video in the set
   activeVideo = activeVideo || currentVideoElements.values().next().value;
 
-  // Check if Picture-in-Picture is supported and toggle it
   if (
     activeVideo.webkitSupportsPresentationMode &&
     typeof activeVideo.webkitSetPresentationMode === "function"
@@ -50,9 +47,13 @@ function updateVideoElements() {
   }
 }
 
-safari.self.addEventListener("message", handleMessage);
+function handlePageUnload() {
+  safari.extension.dispatchMessage("pageUnloaded");
+}
 
+safari.self.addEventListener("message", handleMessage);
 window.addEventListener("focus", updateVideoElements);
+window.addEventListener("beforeunload", handlePageUnload);
 
 const observer = new MutationObserver(updateVideoElements);
 observer.observe(document, { childList: true, subtree: true });
